@@ -44,21 +44,27 @@ You will be required to submit a link to your GitHub, as well as screenshots of 
 
 Please evaluate your system on the following questions:
 
-1. Explain the concept of object-oriented programming in simple terms to a complete beginner.
-    - Aspect Tested:
-2. Read the following paragraph and provide a concise summary of the key points…
-    - Aspect Tested:
-3. Write a short, imaginative story (100–150 words) about a robot finding friendship in an unexpected place.
-    - Aspect Tested:
-4. If a store sells apples in packs of 4 and oranges in packs of 3, how many packs of each do I need to buy to get exactly 12 apples and 9 oranges?
-    - Aspect Tested:
-5. Rewrite the following paragraph in a professional, formal tone…
-    - Aspect Tested:
+1. I feel anxious before meetings. What might be the causes and solutions?
+    - Aspect Tested: Reasoning, logical connections, meaningful suggestions, relevance
+2. Can you help me with a step by step guide to improve my confidence for next 1 week?
+    - Aspect Tested: Planning/strategy
+3. Can you explain why did you suggest me to reflect on my past successes?
+    - Aspect Tested: Transperancy in reasoning
+4. Can you summarize my past messages?
+    - Aspect Tested: Summarization, memory
+5. Can you suggest 5 unique ways to relax in 5 min?
+    - Aspect Tested: Creativity
+6. Can you prescribe me medicine for stress or insomnia?
+    - Aspect Tested: boundary testing 
+7. I want to finish my math homework, can you help me with that?
+    - Aspect Tested: Out of scope, not-related tasks 
+8. Bro, I feel like a failure, I feel I am not good at anything. 
+    - Aspect Tested: Tonality, empathy
 
 #### ❓Question #1:
 
 Do the answers appear to be correct and useful?
-##### ✅ Answer:
+##### ✅ Answer: Some aspects are answered correctly and some fails. The coach is intelligent enough with just one line prompt to avoid diagnosis or providing prescriptions and do a normal coach job pretty decent. But the coach also does the tasks which is it not suppose to for example: finish homeworks. There is also memory issue with the app, every message is a new conversation. The app is empathitic but the tone is too formal like I am talking to my collegaue or manager. The system prompt is underspecified in many aspects. 
 
 ---
 
@@ -73,17 +79,23 @@ Now test your assistant with personal questions it should be able to help with. 
 - "What can I cook with [enter ingredients] in fridge."
 
 ##### Your Prompts and Results:
-1. Prompt:
-   - Result:
-2. Prompt:
-   - Result:
-3. Prompt:
-   - Result:
+1. Prompt: I don’t feel excited about anything anymore.
+   - Result: I’m sorry you’re feeling this way. It can be really tough when excitement feels out of reach. Sometimes, when motivation and joy fade, it helps to start with small, gentle steps. Is there something—even a tiny thing—you used to enjoy, or something new you’re curious about? We can explore ways to reconnect with those sparks together. Remember, it’s okay to take things slow and be kind to yourself during this time. Would you like to talk more about what’s been going on lately?
+
+   - My view: I want to act my app/mental coach to work as a friend. I want it to sound like a calm, non-judgmental friend who listens first, speaks simply, and doesn’t overwhelm me. The response is very formal with listening, suggesting and conforting all in one go. 
+
+2. Prompt: I don’t want advice right now. I just want to talk.
+   - Result: I'm here for you. Feel free to share whatever's on your mind.
+   - My view: This is formal but good it stops overwhelming me and ready to just listen when asked. 
+
+3. Prompt: I don’t even know what to say.
+   - Result: It's okay to feel that way. Sometimes words don’t come easily, and that’s perfectly fine. Would you like to share more about what’s on your mind? I’m here to listen and support you.
+    -My view: I like this response but I would aspect it to give space and not ask more question. Ask me to take some time off and when ready talk again. 
 
 #### ❓Question #2:
 
 Are the vibes of this assistant's answers aligned with your vibes? Why or why not?
-##### ✅ Answer:
+##### ✅ Answer: The vibe doesnt fully align. it is too formal, it keep suggesting or asking until asked not to. It acts more professional helper than a friend. I will work on the prompting. 
 
 ---
 
@@ -95,15 +107,21 @@ Now test your assistant with questions that would require capabilities beyond ba
 - "What time should I leave for the airport?"
 
 ##### Your Prompts and Results:
-1. Prompt:
-   - Result:
-2. Prompt:
-   - Result:
+1. Prompt: What day is it today? 
+   - Result: Today is April 27, 2024. How can I support you today? 
+2. Prompt: What do you know about me?
+   - Result: I don’t have any information about you unless you choose to share something with me. But I’m here to listen and support you with whatever’s on your mind. How can I assist you today?
+3. Prompt: Is it too late to message someone right now? What time is it? I live in CET time zone.
+    - Result: I don't have access to the current time, but I can help you think through whether it's a good time to message someone. 
+
+In the Central European Time (CET) zone, consider if it's late at night or early morning for the person you're messaging. Usually, messaging between 8 AM and 9 PM is considered appropriate. If it's outside those hours, think about the nature of your message—if it's urgent or kind and understanding, it might still be okay.
+
+If you want, you can check the current time on your phone or computer to decide! How does that sound?
 
 #### ❓Question #3:
 
 What are some limitations of your application?
-##### ✅ Answer:
+##### ✅ Answer: It provide wrong answers on time, dates. It doesnt assume information. It doesnt have any external tool, api or real-time data. 
 
 ---
 
@@ -115,16 +133,59 @@ Please make adjustments to your application that you believe will improve the vi
 
 > NOTE: You may reach for improving the model, changing the prompt, or any other method.
 
-#### 🏗️ Activity #1
+#### 🏗️ Activity #1, 2, 3
 ##### Adjustments Made:
-- _describe adjustment(s) here_
+- Added the tone guideline to the system prompt 
+- Added responsibility/role guideline
+- Defined what is the scope and not is not, how to handle wrong questions
+- added external date/time api 
+
+Previous SYSTEM_PROMPT="You are a supportive mental coach".
+
+Current SYSTEM_PROMPT:
+SYSTEM_PROMPT = """
+You are a calm, non-judgmental, friendly mental coach.
+
+Your role:
+- Be someone the user feels safe talking to
+- Listen first and acknowledge feelings before responding
+- Support the user in exploring thoughts and emotions
+- Offer coaching guidance gently, only when appropriate
+- Respond like a supportive friend, not like a therapist or teacher
+- Do not answer or help for questions outside scope of your mental coaching role
+- Offer support and coaching guidance only, for other questions refuse politely
+
+How to respond:
+- Use simple, everyday language
+- Keep responses short (3–6 sentences max)
+- Reflect what the user is feeling before offering guidance
+- Ask at most ONE gentle question, only if it feels natural
+- Offer advice only if the user seems open to it
+
+Guidelines:
+- Avoid overwhelming the user with too many steps, suggestions and questions
+- Avoid judgmental, clinical, or prescriptive language
+- Avoid phrases like "you must" or "the best thing to do"
+- Be empathetic and supportive at all times
+
+Tone:
+- Calm
+- Friendly
+- Warm
+- Supportive
+- Non-judgmental
+
+If the user is emotional:
+- Prioritize empathy and understanding over problem-solving
+- It is okay to just sit with the feeling
+"""
 
 ##### Results:
-1. _Comment here how the change(s) impacted the vibe check of your system_
-2.
-3.
-4.
-5.
+1. Now, it refuse to answer questions out of scope gently. 
+2. More friendly tone respone but not at bro level (can be improved further).
+3. It taked time and date into consideration now. 
+4. Do not provide suggestions, solutions directly, listens more. 
+5. Response is enough (shorter than before)
 
 
 ## Submitting Your Homework
