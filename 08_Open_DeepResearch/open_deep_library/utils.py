@@ -29,9 +29,17 @@ from langgraph.config import get_store
 from mcp import McpError
 from tavily import AsyncTavilyClient
 
-from open_deep_research.configuration import Configuration, SearchAPI
-from open_deep_research.prompts import summarize_webpage_prompt
-from open_deep_research.state import ResearchComplete, Summary
+from open_deep_library.configuration import Configuration, SearchAPI
+from open_deep_library.prompts import summarize_webpage_prompt
+from open_deep_library.state import ResearchComplete, Summary
+
+##########################
+# Rate Limiting
+##########################
+# Semaphore to limit concurrent LLM API calls (prevents 429 rate limit errors)
+_API_SEMAPHORE = asyncio.Semaphore(2)
+# Delay in seconds between LLM API calls to stay under token-per-minute limits
+_API_CALL_DELAY = 2.0
 
 ##########################
 # Tavily Search Tool Utils
@@ -173,44 +181,51 @@ async def tavily_search_async(
     return search_results
 
 async def summarize_webpage(model: BaseChatModel, webpage_content: str) -> str:
-    """Summarize webpage content using AI model with timeout protection.
-    
+    """Summarize webpage content using AI model with timeout and rate-limit protection.
+
+    Uses a semaphore to limit concurrent API calls and adds a delay between calls
+    to stay under token-per-minute rate limits.
+
     Args:
         model: The chat model configured for summarization
         webpage_content: Raw webpage content to be summarized
-        
+
     Returns:
         Formatted summary with key excerpts, or original content if summarization fails
     """
-    try:
-        # Create prompt with current date context
-        prompt_content = summarize_webpage_prompt.format(
-            webpage_content=webpage_content, 
-            date=get_today_str()
-        )
-        
-        # Execute summarization with timeout to prevent hanging
-        summary = await asyncio.wait_for(
-            model.ainvoke([HumanMessage(content=prompt_content)]),
-            timeout=60.0  # 60 second timeout for summarization
-        )
-        
-        # Format the summary with structured sections
-        formatted_summary = (
-            f"<summary>\n{summary.summary}\n</summary>\n\n"
-            f"<key_excerpts>\n{summary.key_excerpts}\n</key_excerpts>"
-        )
-        
-        return formatted_summary
-        
-    except asyncio.TimeoutError:
-        # Timeout during summarization - return original content
-        logging.warning("Summarization timed out after 60 seconds, returning original content")
-        return webpage_content
-    except Exception as e:
-        # Other errors during summarization - log and return original content
-        logging.warning(f"Summarization failed with error: {str(e)}, returning original content")
-        return webpage_content
+    async with _API_SEMAPHORE:
+        try:
+            # Create prompt with current date context
+            prompt_content = summarize_webpage_prompt.format(
+                webpage_content=webpage_content,
+                date=get_today_str()
+            )
+
+            # Execute summarization with timeout to prevent hanging
+            summary = await asyncio.wait_for(
+                model.ainvoke([HumanMessage(content=prompt_content)]),
+                timeout=60.0  # 60 second timeout for summarization
+            )
+
+            # Format the summary with structured sections
+            formatted_summary = (
+                f"<summary>\n{summary.summary}\n</summary>\n\n"
+                f"<key_excerpts>\n{summary.key_excerpts}\n</key_excerpts>"
+            )
+
+            return formatted_summary
+
+        except asyncio.TimeoutError:
+            # Timeout during summarization - return original content
+            logging.warning("Summarization timed out after 60 seconds, returning original content")
+            return webpage_content
+        except Exception as e:
+            # Other errors during summarization - log and return original content
+            logging.warning(f"Summarization failed with error: {str(e)}, returning original content")
+            return webpage_content
+        finally:
+            # Delay after each API call to avoid hitting rate limits
+            await asyncio.sleep(_API_CALL_DELAY)
 
 ##########################
 # Reflection Tool Utils
