@@ -70,19 +70,39 @@ What is the key architectural difference between the `simple_agent` and `agent_w
 
 ##### Answer:
 
+The simple_agent is pretty straightforward. You send it a message, it thinks, and if it needs to use a tool it does. Then it thinks again with the tool result, and when it's done it just stops. There's no second-guessing itself.
 
+agent_with_helpfulness adds a "wait, was that actually a good answer?" step after the agent responds. Once the agent finishes, instead of immediately stopping, the graph asks a second model call: "Given the original question and this response, was that actually helpful?" If yes, it stops. If no, it sends the agent back to try again with another response.
+The obvious danger with that kind of setup is: what if the agent keeps giving bad answers forever? Two things prevent that:
+
+A message count check: helpfulness_node checks if there are more than 10 messages in the conversation. If so, it just forces the graph to stop, no questions asked.
+A stop signal: when that limit fires, it appends a HELPFULNESS:END message, and the routing logic knows that when it sees that message, it's time to exit no matter what.
+
+So the helpfulness loop will keep pushing the agent to do better, but it gives up and exits after a few rounds rather than spinning forever.
 
 #### Question 2:
 What is the role of `langgraph.json` in the LangGraph Deployments? Describe each of its key fields and how the platform uses this file to discover and serve your graphs.
 
 ##### Answer:
 
+Langgraph.json is an instruction manual the LangGraph platform reads before it does anything. When we run langgraph dev, the very first thing it does is open this file to figure out what we've built and how to run it. 
 
+Each field tells the platform something specific:
+
+- version — Just tells the platform which version of the manifest format we are using, so it knows how to read the rest of the file.
+- dependencies — Tells it where our Python code lives so it can install it before starting up. The "." just means "this current folder."
+- env — Points it to our .env file so it loads our API keys automatically when the server starts.
+- python_version — Makes sure the server runs on the same Python version we developed with, so nothing breaks unexpectedly.
+- graphs — This is the most important part. It's a map of names to actual Python objects. It tells the platform "here's a graph called simple_agent, and you can find the actual code at this import path." This is how our graph becomes a live API endpoint.
+- assistants — These are the user-facing names for our graphs. Each assistant points to a graph and gives it a name and description that shows up in Studio's UI. It also let us potentially have multiple assistants sharing the same underlying graph but configured differently down the line.
 
 #### Activity #1:
 Create your own agent graph! Build a new graph in `app/graphs/` with a custom evaluation node (e.g., a vibe checker, a fact verifier, a summarizer — get creative!). Register it in `langgraph.json`, serve it with `uv run langgraph dev`
 
 ##### Answer:
+
+I built a Clarity Checker graph. After the agent gives a response, instead of just stopping, it pauses and asks itself: "Was that actually clear and easy to understand?" If yes, it stops and returns the answer. If no, it takes the feedback (like "too much jargon" or "too long") and rewrites the response in a simpler way. To make sure it doesn't keep looping forever, it automatically stops after 10 messages no matter what.
+I added it to langgraph.json so the server knows about it, and when I ran uv run langgraph dev all three graphs loaded successfully: simple_agent, agent_with_helpfulness, and the new agent_with_clarity.
 
 
 
