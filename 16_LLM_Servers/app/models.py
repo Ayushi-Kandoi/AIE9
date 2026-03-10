@@ -20,7 +20,7 @@ FIREWORKS_BASE_URL = "https://api.fireworks.ai/inference/v1"
 def get_chat_model(model_name: str | None = None, *, temperature: float = 0) -> Any:
     """Return a configured LangChain ChatOpenAI client pointed at Fireworks."""
     name = model_name or os.environ.get(
-        "FIREWORKS_CHAT_MODEL", "accounts/fireworks/models/gpt-oss-20b"
+        "FIREWORKS_CHAT_MODEL", "accounts/ayushikandoi24-5198c/deployments/rgrwmom8"
     )
     return ChatOpenAI(
         model=name,
@@ -56,3 +56,11 @@ def fix_tool_calls(response: AIMessage) -> AIMessage:
     response.tool_calls = fixed
     response.invalid_tool_calls = remaining_invalid
     return response
+
+def get_openai_model(temperature: float = 0) -> Any:
+    """Return a configured ChatOpenAI client pointed at OpenAI for comparison."""
+    return ChatOpenAI(
+        model="gpt-4o-mini",
+        temperature=temperature,
+        openai_api_key=os.environ["OPENAI_API_KEY"],
+    )
